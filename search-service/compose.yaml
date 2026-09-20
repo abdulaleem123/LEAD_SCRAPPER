@@ -1,0 +1,12 @@
+name: sales-os-search
+services:
+  search:
+    image: docker.io/searxng/searxng:latest
+    ports:
+      - "127.0.0.1:7080:8080"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      SEARXNG_SECRET: ${SALES_SEARCH_SECRET:?Run scripts/start-search.ps1}
+    restart: unless-stopped
+    mem_limit: 512m

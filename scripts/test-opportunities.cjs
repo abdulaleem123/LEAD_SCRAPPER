@@ -1,0 +1,38 @@
+// Isolated fixtures only. Never connects to providers or opens the existing CRM.
+const ts=require('typescript'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+require.extensions['.ts']=(module,filename)=>module._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,filename);
+process.env.OPPORTUNITIES_DATA_DIR=fs.mkdtempSync(path.join(os.tmpdir(),'opportunity-tests-'));
+delete process.env.OPENAI_API_KEY;delete process.env.ANTHROPIC_API_KEY;process.env.AI_PROVIDER='openai';
+const {normalize,qualify,timestamp,identity,fingerprint,csvCell}=require('../src/lib/opportunities/quality.ts');
+const {defaults,platforms}=require('../src/lib/opportunities/types.ts');
+const store=require('../src/lib/opportunities/store.ts');
+const {actorInput}=require('../src/lib/opportunities/sources.ts');
+let count=0;function check(label,fn){fn();count++;console.log('PASS',label);}
+const now=new Date(),date=new Date(now-20*60000).toISOString();
+const text='Our school needs a website. We are looking for a web designer. Budget $2000, urgent this week.';
+const raw={text,url:'https://www.linkedin.com/posts/person-activity-123',author:{name:'School office'},postedAt:{date}};
+const post=normalize('linkedin',raw,now);
+check('Preserve post publication time, separately from discovery',()=>{assert.equal(post.publishedAt,date);assert.equal(post.discoveredAt,now.toISOString());});
+check('Strong buyer request passes with exact evidence',()=>{const v=qualify(post,defaults);assert.ok(v.score>=85);assert.ok(post.text.includes(v.evidence));assert.equal(v.service,'Websites');});
+check('Seller advertisement rejected',()=>assert.equal(qualify({...post,text:'Looking for a website? We offer website design. Hire me today.'},defaults),null));
+check('LinkedIn provider link field normalized',()=>assert.ok(normalize('linkedin',{...raw,url:undefined,linkedinUrl:raw.url})));
+check('Website recommendations are not website-building leads',()=>assert.equal(qualify({...post,text:'Looking for websites to read books for free. Any suggestions?'},defaults),null));
+check('Hosting-product request is not a website project',()=>assert.equal(qualify({...post,text:'I am looking for hosting for my WordPress website. Need a cheap hosting provider.'},defaults),null));
+check('Resolved request rejected',()=>assert.equal(qualify({...post,text:'I need a website but found someone now.'},defaults),null));
+check('Stale post rejected even if just discovered',()=>assert.equal(qualify({...post,publishedAt:new Date(now-48*3600000).toISOString()},defaults),null));
+check('Missing and future dates never become fresh leads',()=>{assert.equal(normalize('linkedin',{...raw,postedAt:undefined}),null);assert.equal(normalize('linkedin',{...raw,postedAt:{date:new Date(+now+3600000).toISOString()}}),null);});
+check('Seconds and milliseconds normalize consistently',()=>assert.equal(timestamp(1788650000),timestamp(1788650000000)));
+check('Dangerous and unrelated result links rejected',()=>{assert.equal(normalize('linkedin',{...raw,url:'javascript:alert(1)'}),null);assert.equal(normalize('linkedin',{...raw,url:'https://evil.test/posts/a'}),null);});
+check('CSV formula injection neutralized',()=>assert.equal(csvCell('=HYPERLINK("evil")'),'"\'=HYPERLINK(""evil"")"'));
+check('Filters honor service and organization choices',()=>{assert.equal(qualify(post,{...defaults,services:['Animation']}),null);assert.equal(qualify({...post,text:'I need a website designer.'},{...defaults,organizationOnly:true}),null);});
+const fixtures={x:{text,url:'https://x.com/person/status/123',createdAt:date},facebook:{text,url:'https://www.facebook.com/person/posts/123',timestamp:date},instagram:{caption:text,shortCode:'ABCD',timestamp:date,ownerUsername:'school'},reddit:{title:'Need a web designer',selftext:text,permalink:'/r/forhire/comments/abc/request/',created_utc:Math.floor(Date.parse(date)/1000),author:'school'},threads:{text,url:'https://www.threads.net/@school/post/ABC',timestamp:date},bluesky:{record:{text,createdAt:date},uri:'at://did:plc:abc/app.bsky.feed.post/123',author:{did:'did:plc:abc',handle:'school.bsky.social'}},tiktok:{text,webVideoUrl:'https://www.tiktok.com/@school/video/123',createTimeISO:date,authorMeta:{name:'school'}}};
+for(const [p,r] of Object.entries(fixtures))check(`${p} fixture maps to a real post shape`,()=>assert.ok(normalize(p,r,now)));
+check('All paid inputs are bounded',()=>{for(const p of platforms){const spec=actorInput(p,defaults,0);assert.ok(spec.query.length);if(p==='linkedin')assert.ok(spec.input.maxPosts>0);if(p==='tiktok')assert.equal(spec.input.searchSection,'/video');}});
+check('Deduplication preserves contacted status and notes',()=>{const o={...post,...qualify(post,defaults),id:identity(post),status:'new',notes:''};assert.ok(store.insertOpportunity(o,fingerprint(post)));store.editOpportunity(o.id,'contacted','Following up Friday');assert.equal(store.insertOpportunity(o,fingerprint(post)),false);assert.equal(store.listOpportunities()[0].status,'contacted');assert.equal(store.listOpportunities()[0].notes,'Following up Friday');});
+check('Duplicate scan start blocked transactionally',()=>{store.createScan({...defaults,platforms:['bluesky']});assert.throws(()=>store.createScan(defaults),/already running/);});
+check('Partial provider failure does not discard successful sources',()=>{const scan=store.scans(1)[0];store.updateJob(scan.jobs[0].id,{status:'succeeded'});store.finishScan(scan.id);assert.equal(store.scans(1)[0].status,'succeeded');const id=store.createScan({...defaults,platforms:['bluesky','reddit']});const jobs=store.scans(1)[0].jobs;store.updateJob(jobs[0].id,{status:'succeeded'});store.updateJob(jobs[1].id,{status:'failed',error:'Provider unavailable'});store.finishScan(id);assert.equal(store.scans(1)[0].status,'partial');});
+check('Daily scan limit enforced',()=>assert.throws(()=>store.createScan({...defaults,maxScansPerDay:1}),/Daily scan limit/));
+check('Paused settings persist',()=>{store.saveSettings({...defaults,enabled:false,intervalMinutes:10});assert.equal(store.settings().enabled,false);assert.equal(store.settings().intervalMinutes,10);});
+check('Only one worker owns the database lease',()=>{assert.ok(store.lease('first'));assert.equal(store.lease('second'),false);store.release('first');assert.ok(store.lease('second'));store.release('second');});
+console.log(`${count} checks passed. Test data: ${process.env.OPPORTUNITIES_DATA_DIR}`);
+store.db().close();

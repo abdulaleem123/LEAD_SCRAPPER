@@ -1,0 +1,13 @@
+const ts=require('typescript'),fs=require('node:fs'),assert=require('node:assert/strict');
+require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,f);
+const {settingsSchema}=require('../src/lib/opportunities/types.ts');
+const {assessText}=require('../src/lib/opportunities/quality.ts');
+const {keywordPlan}=require('../src/lib/opportunities/free-sources.ts');
+const s=settingsSchema.parse({industries:['school','academy'],requireIndustry:true});
+for(const text of ['Our school needs someone to revamp our website.','We need a RAG developer for our academy.','I need someone to animate lessons for our school.']) assert.ok(assessText(text,s),text);
+for(const text of ['Our preschool needs a website.','We need a website for a restaurant.','Our school offers animation services. Hire me.','Our school no longer needs a website.']) assert.equal(assessText(text,s),null,text);
+assert.ok(keywordPlan(s,0).every(q=>q.endsWith('school')));
+assert.ok(keywordPlan(s,2).every(q=>q.endsWith('academy')));
+assert.deepEqual(keywordPlan({...s,queries:['"need someone" "SEO"']},0),['"need someone" "SEO"']);
+assert.deepEqual(settingsSchema.parse({}).industries,[]);
+console.log('Industry targeting and RAG buyer-intent checks passed.');

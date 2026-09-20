@@ -1,0 +1,57 @@
+{
+  "originalNavigationSha256": "95828A812ED634DB7A2C6A7166AB6758476B890F90443280837448B9897937A5",
+  "files": [
+    {
+      "path": "OPPORTUNITIES.md",
+      "sha256": "0AB87F138F7F567BF7E8C184C6292D356C8211ADF54EA730F7D97650D48F1A33"
+    },
+    {
+      "path": "scripts\\test-opportunities.cjs",
+      "sha256": "F02E4491925A2338EAE162FC37D08894D68F903209E0682FD875D176D896694C"
+    },
+    {
+      "path": "src\\instrumentation.ts",
+      "sha256": "FA3C422B2D41715201106CE249762FDBC7949F5ADEA9FDA3BF3468D3EC64A7C6"
+    },
+    {
+      "path": "src\\app\\api\\opportunities\\route.ts",
+      "sha256": "3A3DDFA37E25ACB5C25D6FC56CB8C15E40A4263C1C96BD7CBEE541AAB5071012"
+    },
+    {
+      "path": "src\\app\\opportunities\\opportunities.css",
+      "sha256": "A2BC2A1A40C694B30BB5383708B520AA721C04748E0C470825CFCE8B3753B38C"
+    },
+    {
+      "path": "src\\app\\opportunities\\page.tsx",
+      "sha256": "7672A8D83CC485B3E16893B79CE8D190C3DD68F3623AF9356323306BF6EB1B3C"
+    },
+    {
+      "path": "src\\components\\Nav.tsx",
+      "sha256": "01A8A4091B852F6DB57CCD079758D158CDDE2B22BC3DE6CD8643FC89D1181B4B"
+    },
+    {
+      "path": "src\\lib\\opportunities\\quality.ts",
+      "sha256": "A6B44517048A1BF67495AC51216AA269BCBFDB2765CED7591C48B8CE4DA326EC"
+    },
+    {
+      "path": "src\\lib\\opportunities\\review.ts",
+      "sha256": "A5ABEFEC42BAB7A5A0119125BCB973C626A69BCE63ECFC9629A317D91DD97CBA"
+    },
+    {
+      "path": "src\\lib\\opportunities\\sources.ts",
+      "sha256": "896F0B74D74D8FF1B79270E895BF8BD076C005470194CE70A9BC00F56BA8487A"
+    },
+    {
+      "path": "src\\lib\\opportunities\\store.ts",
+      "sha256": "6F6F80CB22A69362337949C18180CDEDB4F64297CBD8F45D300BA2FCB46DC0D2"
+    },
+    {
+      "path": "src\\lib\\opportunities\\types.ts",
+      "sha256": "380C72EBAD2F154DF6FBC5128331677CF292513653657594EA867D27ED1EA1D4"
+    },
+    {
+      "path": "src\\lib\\opportunities\\worker.ts",
+      "sha256": "CC3CC832D6DB3B52C50E19E5AA2F79CCF2A2DDA17D6E55D09397A029442F9AA7"
+    }
+  ]
+}

@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sales OS — Lead Scraping Machine
 
-## Getting Started
+Built from [I Built A Machine That Gets Me 1,000 Leads On Autopilot (Day 1)](https://www.youtube.com/watch?v=491FyUW_jfc) by Augmented AI.
 
-First, run the development server:
+Day-1 pipeline in one local app:
+
+1. **ICP Generator** — Alex Berman / Patrick Dang / Eric Novoselov frameworks + OpenAI, Claude, or LM Studio  
+2. **Search terms** — Apollo + LinkedIn + Apify JSON (with IT/tech excludes)  
+3. **Apify scrape** — LinkedIn people or Google Maps local businesses  
+4. **Auto-filter** — drop CTOs / IT directors / software companies  
+5. **Lead CRM** — qualify, exclude, dedupe, CSV export  
+
+## Quick start
 
 ```bash
+cp .env.example .env
+# fill APIFY_TOKEN + at least one AI key
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Required env
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Key | Why |
+|---|---|
+| `APIFY_TOKEN` | Run scrapers ([Apify console](https://console.apify.com/account/integrations)) |
+| `OPENAI_API_KEY` **or** `ANTHROPIC_API_KEY` **or** LM Studio URL | ICP generation |
+| `AI_PROVIDER` | `openai` \| `anthropic` \| `lmstudio` |
 
-## Learn More
+Optional:
 
-To learn more about Next.js, take a look at the following resources:
+- `APIFY_LINKEDIN_ACTOR` — default `harvestapi/linkedin-profile-search` (swap if ratings change)
+- `APIFY_MAPS_ACTOR` — default `compass/crawler-google-places`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Recommended workflow (matches the video)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Open **ICP Generator** → pick Alex Berman → answer the diagnostic (or paste all answers at once).  
+2. Review score, golden-goose sizing, exclude titles, and Apify search queries.  
+3. Go to **Scrape Leads** → select that ICP → start with **25 or 50** leads.  
+4. Check excluded IT/tech rows in **Lead CRM**, then scale to 500–1000.  
+5. Export CSV for enrichment / outreach (Day 2 in the series).
 
-## Deploy on Vercel
+## Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js (App Router) + TypeScript  
+- SQLite (`data/sales-os.db`) via `better-sqlite3`  
+- Apify client for actors  
+- Zod-validated AI JSON for ICP + search cards  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- Actors on Apify change over time — use the in-app actor suggestions or set `APIFY_LINKEDIN_ACTOR`.  
+- Respect LinkedIn / site ToS and local privacy laws. Use data only for legitimate outreach.  
+- Day 2 (enrich + validate) is intentionally stubbed as CRM statuses for now.

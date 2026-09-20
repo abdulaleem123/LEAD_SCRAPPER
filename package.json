@@ -3,21 +3,31 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 7000",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start --port 7000",
+    "lint": "eslint",
+    "test:opportunities": "node scripts/test-opportunities.cjs"
   },
   "dependencies": {
+    "apify-client": "^2.25.0",
+    "better-sqlite3": "^13.0.3",
+    "cheerio": "^1.2.0",
     "next": "16.3.3",
+    "openai": "^7.8.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "robots-parser": "^3.0.1",
+    "uuid": "^14.0.2",
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",

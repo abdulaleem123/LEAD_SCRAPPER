@@ -1,0 +1,15 @@
+const ts=require('typescript'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+require.extensions['.ts']=(module,filename)=>module._compile(ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,filename);
+process.chdir(fs.mkdtempSync(path.join(os.tmpdir(),'crawler-tests-')));
+const c=require('../src/lib/crawler.ts');
+for(const ip of ['127.0.0.1','10.1.2.3','169.254.169.254','172.20.1.1','192.168.1.1','100.64.0.1','224.0.0.1','::1']) assert.equal(c.publicIPv4(ip),false,ip);
+assert.equal(c.publicIPv4('8.8.8.8'),true);
+assert.throws(()=>c.normalizeUrl('file:///etc/passwd'));
+assert.throws(()=>c.normalizeUrl('http://user:pass@example.com'));
+const result=c.extract('<title>School</title><script>fake@bad.com</script><a href="mailto:Office@school.edu">Email</a><a href="tel:+15555555555">Call</a><a href="/contact">Contact</a>','https://school.edu');
+assert.equal(result.email,'office@school.edu');assert.equal(result.phone,'+15555555555');assert.ok(result.links.includes('https://school.edu/contact'));
+assert.equal(c.extract('<p>No email published</p>','https://school.edu').email,null);
+assert.throws(()=>c.createCrawl(['file:///secret'],5,false));assert.equal(c.crawlerState().length,0);
+const id=c.createCrawl(['https://school.edu','https://school.edu'],5,false);c.controlCrawl(id,'paused');assert.equal(c.crawlerState()[0].status,'paused');
+assert.throws(()=>c.createCrawl(['https://other.edu'],5,false));c.controlCrawl(id,'cancelled');assert.equal(c.crawlerState()[0].status,'cancelled');
+console.log('Crawler checks passed: public network guard, URL validation, extraction, empty email, persisted jobs and pause/cancel.');
