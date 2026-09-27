@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -151,12 +151,12 @@ export default function IcpPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="panel rounded-3xl p-6 space-y-5">
+        <section className="panel rounded-[10px] p-6 space-y-5 fade-up transition-shadow duration-300 hover:shadow-lg">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="label">Expert framework</label>
               <select
-                className="field"
+                className="field transition-shadow duration-200 focus:shadow-md"
                 value={expertId}
                 onChange={(e) => setExpertId(e.target.value as Expert["id"])}
               >
@@ -170,7 +170,7 @@ export default function IcpPage() {
             <div>
               <label className="label">AI model provider</label>
               <select
-                className="field"
+                className="field transition-shadow duration-200 focus:shadow-md"
                 value={provider}
                 onChange={(e) =>
                   setProvider(e.target.value as typeof provider)
@@ -184,7 +184,7 @@ export default function IcpPage() {
           </div>
 
           {expert && (
-            <p className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm text-[var(--muted)]">
+            <p className="rounded-[10px] border border-[var(--line)] bg-white px-4 py-3 text-sm text-[var(--muted)] fade-up">
               {expert.description}
             </p>
           )}
@@ -192,7 +192,7 @@ export default function IcpPage() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary transition-transform duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0"
               onClick={() => setBulkMode((v) => !v)}
             >
               {bulkMode ? "Question mode" : "Paste all answers at once"}
@@ -200,26 +200,34 @@ export default function IcpPage() {
           </div>
 
           {bulkMode ? (
-            <div>
+            <div className="fade-up">
               <label className="label">One answer per line (or key: value)</label>
               <textarea
-                className="field min-h-48"
+                className="field min-h-48 rounded-[10px] transition-shadow duration-200 focus:shadow-md"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
                 placeholder={expert?.questions.map((q) => q.label).join("\n")}
               />
-              <button type="button" className="btn btn-secondary mt-3" onClick={applyBulk}>
+              <button
+                type="button"
+                className="btn btn-secondary mt-3 transition-transform duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0"
+                onClick={applyBulk}
+              >
                 Apply answers
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {expert?.questions.map((q) => (
-                <div key={q.id}>
+              {expert?.questions.map((q, i) => (
+                <div
+                  key={q.id}
+                  className="fade-up"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
                   <label className="label">{q.label}</label>
                   {q.options ? (
                     <select
-                      className="field"
+                      className="field rounded-[10px] transition-shadow duration-200 focus:shadow-md"
                       value={answers[q.id] || ""}
                       onChange={(e) =>
                         setAnswers((a) => ({ ...a, [q.id]: e.target.value }))
@@ -234,7 +242,7 @@ export default function IcpPage() {
                     </select>
                   ) : (
                     <input
-                      className="field"
+                      className="field rounded-[10px] transition-shadow duration-200 focus:shadow-md"
                       value={answers[q.id] || ""}
                       placeholder={q.placeholder}
                       onChange={(e) =>
@@ -248,14 +256,14 @@ export default function IcpPage() {
           )}
 
           {error && (
-            <p className="rounded-2xl bg-[#fff1f2] px-4 py-3 text-sm text-[var(--danger)]">
+            <p className="rounded-[10px] bg-[#fff1f2] px-4 py-3 text-sm text-[var(--danger)] fade-up">
               {error}
             </p>
           )}
 
           <button
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary transition-transform duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:hover:translate-y-0"
             disabled={loading}
             onClick={generate}
           >
@@ -264,16 +272,17 @@ export default function IcpPage() {
         </section>
 
         <aside className="space-y-5">
-          <div className="panel rounded-3xl p-6">
+          <div className="panel rounded-[10px] p-6 fade-up transition-shadow duration-300 hover:shadow-lg">
             <h2 className="display text-xl font-bold">Saved ICPs</h2>
             <ul className="mt-4 space-y-2">
               {icps.length === 0 && (
                 <li className="text-sm text-[var(--muted)]">None yet.</li>
               )}
-              {icps.map((icp) => (
+              {icps.map((icp, i) => (
                 <li
                   key={icp.id}
-                  className="flex items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-[10px] border border-[var(--line)] bg-white px-3 py-2 fade-up transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
+                  style={{ animationDelay: `${i * 40}ms` }}
                 >
                   <button
                     type="button"
@@ -287,7 +296,7 @@ export default function IcpPage() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-danger !px-3 !py-1.5 text-xs"
+                    className="btn btn-danger !px-3 !py-1.5 text-xs transition-transform duration-150 ease-out hover:-translate-y-0.5 active:translate-y-0"
                     onClick={() => remove(icp.id)}
                   >
                     Delete
@@ -298,7 +307,7 @@ export default function IcpPage() {
           </div>
 
           {active && profile && (
-            <div className="panel rounded-3xl p-6 space-y-4 fade-up">
+            <div className="panel rounded-[10px] p-6 space-y-4 fade-up">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="display text-2xl font-bold">{active.name}</h2>
@@ -307,7 +316,7 @@ export default function IcpPage() {
                   </p>
                 </div>
                 <span
-                  className={`chip ${
+                  className={`chip transition-transform duration-200 hover:scale-105 ${
                     (active.score || 0) >= 80 ? "chip-ok" : "chip-warn"
                   }`}
                 >
@@ -315,7 +324,7 @@ export default function IcpPage() {
                 </span>
               </div>
               <p>{profile.summary}</p>
-              <div className="rounded-2xl bg-[#ecfdf5] px-4 py-3 text-sm">
+              <div className="rounded-[10px] bg-[#ecfdf5] px-4 py-3 text-sm">
                 <strong>Golden goose:</strong> {profile.goldenGoose}
               </div>
               <div className="grid gap-3 text-sm">
@@ -323,7 +332,10 @@ export default function IcpPage() {
                   <div className="label">Titles</div>
                   <div className="flex flex-wrap gap-1">
                     {(profile.titles || []).map((t) => (
-                      <span key={t} className="chip">
+                      <span
+                        key={t}
+                        className="chip rounded-[10px] transition-transform duration-150 hover:-translate-y-0.5"
+                      >
                         {t}
                       </span>
                     ))}
@@ -333,7 +345,10 @@ export default function IcpPage() {
                   <div className="label">Exclude titles (IT/tech)</div>
                   <div className="flex flex-wrap gap-1">
                     {(profile.excludeTitles || []).slice(0, 12).map((t) => (
-                      <span key={t} className="chip chip-danger">
+                      <span
+                        key={t}
+                        className="chip chip-danger rounded-[10px] transition-transform duration-150 hover:-translate-y-0.5"
+                      >
                         {t}
                       </span>
                     ))}
@@ -350,7 +365,7 @@ export default function IcpPage() {
                   <p>{profile.noBrainerOffer}</p>
                 </div>
               </div>
-              <details className="rounded-2xl border border-[var(--line)] bg-white p-4">
+              <details className="rounded-[10px] border border-[var(--line)] bg-white p-4 transition-shadow duration-200 hover:shadow-md">
                 <summary className="cursor-pointer font-semibold">
                   Search filters (JSON)
                 </summary>

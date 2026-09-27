@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -38,6 +38,52 @@ type DashboardData = {
   };
 };
 
+// Lightweight animated bar chart - no external chart library needed.
+// Renders a small comparative bar (value vs. an implicit max) plus a growth-style trend look.
+function MiniBarChart({
+  value,
+  max,
+  color = "var(--accent)",
+}: {
+  value: number;
+  max: number;
+  color?: string;
+}) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+
+  // Deterministic pseudo-trend bars so it feels like a chart, not just one bar.
+  const bars = [40, 55, 35, 70, 50, 85, pct];
+
+  return (
+    <div className="mt-3 flex h-12 items-end gap-1">
+      {bars.map((h, i) => (
+        <div
+          key={i}
+          className={`flex-1 rounded-[3px] ${
+            i === bars.length - 1 ? "" : "bg-[var(--line)]"
+          }`}
+          style={
+            i === bars.length - 1
+              ? {
+                  height: "0%",
+                  background: color,
+                  animation: `grow-bar 0.8s ease-out forwards`,
+                  animationDelay: `${i * 60}ms`,
+                  ["--bar-h" as any]: `${h}%`,
+                }
+              : {
+                  height: "0%",
+                  animation: `grow-bar 0.6s ease-out forwards`,
+                  animationDelay: `${i * 60}ms`,
+                  ["--bar-h" as any]: `${h}%`,
+                }
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,18 +106,20 @@ export default function HomePage() {
     return <p className="text-[var(--muted)]">Loading Sales OS…</p>;
   }
 
+  const maxValue = Math.max(data.stats.totalLeads, 1);
+
   const cards = [
-    { label: "Total leads", value: data.stats.totalLeads },
-    { label: "New", value: data.stats.newLeads },
-    { label: "With email", value: data.stats.withEmail },
-    { label: "With LinkedIn", value: data.stats.withLinkedin },
-    { label: "Filtered (IT/tech)", value: data.stats.excluded },
-    { label: "ICP profiles", value: data.stats.icps },
+    { label: "Total leads", value: data.stats.totalLeads, color: "var(--accent)" },
+    { label: "New", value: data.stats.newLeads, color: "#0f7a4e" },
+    { label: "With email", value: data.stats.withEmail, color: "#2d6cdf" },
+    { label: "With LinkedIn", value: data.stats.withLinkedin, color: "#0a66c2" },
+    { label: "Filtered (IT/tech)", value: data.stats.excluded, color: "#c45c26" },
+    { label: "ICP profiles", value: data.stats.icps, color: "#7c3aed" },
   ];
 
   return (
     <div className="space-y-8 fade-up">
-      <section className="panel relative overflow-hidden rounded-[28px] p-8 md:p-10">
+      <section className="panel relative overflow-hidden rounded-[10px] p-8 md:p-10">
         <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[rgba(15,122,78,0.12)] blur-2xl" />
         <div className="absolute bottom-0 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-[rgba(196,92,38,0.12)] blur-2xl" />
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
@@ -104,23 +152,26 @@ export default function HomePage() {
         {cards.map((c, i) => (
           <div
             key={c.label}
-            className="panel rounded-3xl p-5 fade-up"
+            className="panel rounded-[10px] p-5 fade-up transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
             style={{ animationDelay: `${i * 40}ms` }}
           >
-            <div className="text-sm text-[var(--muted)]">{c.label}</div>
-            <div className="display mt-2 text-3xl font-bold">{c.value}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-[var(--muted)]">{c.label}</div>
+              <div className="display text-2xl font-bold">{c.value}</div>
+            </div>
+            <MiniBarChart value={c.value} max={maxValue} color={c.color} />
           </div>
         ))}
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <div className="panel rounded-3xl p-6">
+        <div className="panel rounded-[10px] p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="display text-xl font-bold">System status</h2>
             <span className="chip">AI · {data.config.provider}</span>
           </div>
           <ul className="space-y-3 text-sm">
-            <li className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-[var(--line)]">
+            <li className="flex items-center justify-between rounded-[10px] bg-white px-4 py-3 border border-[var(--line)]">
               <span>Lead engine</span>
               <span
                 className={
@@ -130,7 +181,7 @@ export default function HomePage() {
                 {data.config.leadEngineReady ? "Ready" : "Not configured"}
               </span>
             </li>
-            <li className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-[var(--line)]">
+            <li className="flex items-center justify-between rounded-[10px] bg-white px-4 py-3 border border-[var(--line)]">
               <span>AI (ICP generator)</span>
               <span
                 className={data.config.aiReady ? "chip chip-ok" : "chip chip-warn"}
@@ -141,7 +192,7 @@ export default function HomePage() {
           </ul>
         </div>
 
-        <div className="panel rounded-3xl p-6">
+        <div className="panel rounded-[10px] p-6">
           <h2 className="display mb-4 text-xl font-bold">Recent runs</h2>
           {data.runs.length === 0 ? (
             <p className="text-[var(--muted)]">No runs yet. Start from Find Leads.</p>
@@ -150,7 +201,7 @@ export default function HomePage() {
               {data.runs.map((run) => (
                 <li
                   key={run.id}
-                  className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                  className="flex items-center justify-between rounded-[10px] border border-[var(--line)] bg-white px-4 py-3 text-sm"
                 >
                   <div>
                     <div className="font-semibold capitalize">
@@ -168,7 +219,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="panel rounded-3xl p-6">
+      <section className="panel rounded-[10px] p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="display text-xl font-bold">Fresh leads</h2>
           <Link href="/leads" className="btn btn-secondary">
